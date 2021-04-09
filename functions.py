@@ -4,7 +4,6 @@ import time
 import os
 
 area_dict = {}
-area_f = 0  # флаг наличия id города
 area_id = 0  # id города
 
 
@@ -16,31 +15,32 @@ def country_dict():
 
 # получить номер города
 def fnd_city_id(country_name, city_name):
-    global area_f, area_dict
+    city_id = area_f = 0
     for country in json.loads(country_dict()):
-        if country['name'] == country_name:
+         if country['name'] == country_name:
             area_dict = country['areas']
             break
 
     for area in area_dict:
-        for town in range(0, len(area['areas']) - 1):
-            if area['areas'][town]['name'] == city_name:
-                print(area['areas'][town]['name'])
-                city_id = area['areas'][town]['id']
-                area_f = 1
+        if area['name'] == city_name:
+            city_id = area['id']
+        else:
+            for town in range(0, len(area['areas']) - 1):
+                if area['areas'][town]['name'] == city_name:
+                    city_id = area['areas'][town]['id']
+                    area_f = 1
+                    break
+            if area_f == 1:
                 break
-        if area_f == 1:
-            break
 
-    if area_f == 0:
-        city_id = 0
+    if city_id == 0:
         print('Not found')
     return city_id
 
 
 # метод получения страниц с необходимым нам фильтром
 def get_page(page):
-    filters = dict(text='java', area=area_id, only_with_salary='true', page=page, per_page=10)
+    filters = dict(text='программист', area=area_id, only_with_salary='true', page=page, per_page=10)
     req = requests.get('https://api.hh.ru/vacancies', filters)
     data = req.content.decode(encoding='UTF8')
     req.close()
@@ -63,6 +63,7 @@ def writing_pages():
     return 0
 
 
+# в цикле получаем вакансии и записываем их в файлы, в папку для вакансий
 def writing_vacancies():
     for fl in os.listdir('./pages'):
         f = open('./pages/{}'.format(fl), encoding='utf8')  # получение файла из дериктории
